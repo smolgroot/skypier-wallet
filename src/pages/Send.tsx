@@ -6,7 +6,7 @@
  * 2. Specify recipient address
  * 3. Review transaction summary
  * 4. Sign with biometrics
- * 5. Success with animation
+ * 5. Success with real transaction confirmation
  */
 
 import { useState, useEffect } from 'react';
@@ -40,9 +40,9 @@ import {
   KeyboardArrowDown as ArrowDownIcon,
   Check as CheckIcon,
   Fingerprint as FingerprintIcon,
-  OpenInNew as OpenInNewIcon,
   Circle as CircleIcon,
   Celebration as CelebrationIcon,
+  OpenInNew as OpenInNewIcon,
 } from '@mui/icons-material';
 import { useWalletStore } from '@/store/wallet.store';
 import { useBalance } from '@/hooks/useBalance';
@@ -53,12 +53,14 @@ import {
   formatAddress,
   isValidAmount,
   estimateGas,
-  type GasEstimate,
+  sendTransaction,
   getExplorerTxUrl,
+  type GasEstimate,
 } from '@/lib/blockchain/transaction';
 import { webAuthnService } from '@/lib/auth/webauthn';
 
 const steps = ['Amount', 'Recipient', 'Review', 'Sign', 'Success'];
+
 
 // Celebration animation
 const celebrateKeyframes = keyframes`
@@ -161,7 +163,7 @@ export default function Send() {
     setError(null);
 
     try {
-      // Verify biometrics
+      // Step 1: Verify biometrics
       const credentialId = localStorage.getItem('skypier_last_credential_id');
       if (!credentialId) {
         throw new Error('No credential found');
@@ -169,16 +171,24 @@ export default function Send() {
 
       await webAuthnService.authenticate(credentialId);
 
-      // Simulate transaction (in production, would actually sign and send)
-      // For demo, we just show success after biometric auth
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Step 2: Get private key from wallet store
+      const privateKey = useWalletStore.getState().getActiveWalletPrivateKey();
+      if (!privateKey) {
+        throw new Error('Private key not available');
+      }
+
+      // Step 3: Send real transaction to the network
+      const result = await sendTransaction(
+        {
+          to: recipient as `0x${string}`,
+          amount,
+          networkId: selectedNetworkId,
+          from: activeWallet?.address as `0x${string}`,
+        },
+        privateKey as `0x${string}`
+      );
       
-      // Mock transaction hash
-      const mockHash = '0x' + Array.from({ length: 64 }, () => 
-        Math.floor(Math.random() * 16).toString(16)
-      ).join('');
-      
-      setTxHash(mockHash);
+      setTxHash(result.hash);
       handleNext(); // Move to success step
     } catch (err) {
       console.error('Signing failed:', err);
@@ -506,15 +516,19 @@ export default function Send() {
                 Transaction Sent!
               </Typography>
               <Typography variant="body1" color="text.secondary" textAlign="center">
-                Your transaction has been submitted to the network
+                Your transaction has been broadcast to the network
               </Typography>
             </Stack>
+
+            <Alert severity="success" sx={{ width: '100%' }}>
+              Transaction submitted successfully! It may take a few moments to be confirmed.
+            </Alert>
 
             <Paper sx={{ p: 3, width: '100%' }}>
               <Stack spacing={2}>
                 <Box>
                   <Typography variant="caption" color="text.secondary">
-                    Amount Sent
+                    Amount
                   </Typography>
                   <Typography variant="h6" fontWeight={600}>
                     {amount} {balanceData?.symbol ?? 'ETH'}
@@ -538,24 +552,25 @@ export default function Send() {
                   <Typography variant="caption" color="text.secondary">
                     Transaction Hash
                   </Typography>
-                  <Typography fontFamily="monospace" fontSize="0.85rem">
-                    {txHash ? formatAddress(txHash, 12) : 'N/A'}
-                  </Typography>
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <Typography fontFamily="monospace" fontSize="0.85rem">
+                      {txHash ? formatAddress(txHash, 12) : 'N/A'}
+                    </Typography>
+                    {txHash && currentNetwork && (
+                      <IconButton 
+                        size="small"
+                        onClick={() => window.open(getExplorerTxUrl(txHash as `0x${string}`, selectedNetworkId), '_blank')}
+                        sx={{ color: 'primary.main' }}
+                      >
+                        <OpenInNewIcon fontSize="small" />
+                      </IconButton>
+                    )}
+                  </Stack>
                 </Box>
               </Stack>
             </Paper>
 
             <Stack direction="row" spacing={2} width="100%">
-              {txHash && (
-                <Button
-                  variant="outlined"
-                  fullWidth
-                  endIcon={<OpenInNewIcon />}
-                  onClick={() => window.open(getExplorerTxUrl(txHash as `0x${string}`, selectedNetworkId), '_blank')}
-                >
-                  View on Explorer
-                </Button>
-              )}
               <Button
                 variant="contained"
                 fullWidth

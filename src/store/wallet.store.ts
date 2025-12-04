@@ -86,6 +86,9 @@ interface WalletState {
   clearError: () => void;
   reset: () => void;
   
+  // Transaction helpers
+  getActiveWalletPrivateKey: () => string | null;
+  
   // Initialization
   initialize: () => Promise<void>;
 }
@@ -415,6 +418,22 @@ export const useWalletStore = create<WalletState>()(
         reset: () => {
           clearAllData();
           set(initialState);
+        },
+
+        /**
+         * Get the private key for the active wallet (for transaction signing)
+         * Only available when wallet is unlocked
+         */
+        getActiveWalletPrivateKey: (): string | null => {
+          const { activeWallet, isLocked } = get();
+          
+          if (isLocked || !activeWallet) {
+            return null;
+          }
+          
+          // The encryptedPrivateKey field contains the hex private key
+          // In our current flow, it's stored after biometric auth
+          return activeWallet.encryptedPrivateKey ?? null;
         },
       }),
       {

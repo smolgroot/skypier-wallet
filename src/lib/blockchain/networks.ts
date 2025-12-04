@@ -46,7 +46,7 @@ export const networks: Record<string, NetworkConfig> = {
     name: 'Ethereum',
     chain: mainnet,
     rpcUrl: import.meta.env.VITE_ETHEREUM_RPC_URL || 'https://eth.llamarpc.com',
-    explorerUrl: 'https://etherscan.io',
+    explorerUrl: 'https://eth.blockscout.com',
     nativeCurrency: {
       name: 'Ether',
       symbol: 'ETH',
@@ -61,7 +61,7 @@ export const networks: Record<string, NetworkConfig> = {
     name: 'Base',
     chain: base,
     rpcUrl: import.meta.env.VITE_BASE_RPC_URL || 'https://mainnet.base.org',
-    explorerUrl: 'https://basescan.org',
+    explorerUrl: 'https://base.blockscout.com',
     nativeCurrency: {
       name: 'Ether',
       symbol: 'ETH',
@@ -76,7 +76,7 @@ export const networks: Record<string, NetworkConfig> = {
     name: 'Optimism',
     chain: optimism,
     rpcUrl: import.meta.env.VITE_OPTIMISM_RPC_URL || 'https://mainnet.optimism.io',
-    explorerUrl: 'https://optimistic.etherscan.io',
+    explorerUrl: 'https://optimism.blockscout.com',
     nativeCurrency: {
       name: 'Ether',
       symbol: 'ETH',
@@ -91,7 +91,7 @@ export const networks: Record<string, NetworkConfig> = {
     name: 'Arbitrum',
     chain: arbitrum,
     rpcUrl: import.meta.env.VITE_ARBITRUM_RPC_URL || 'https://arb1.arbitrum.io/rpc',
-    explorerUrl: 'https://arbiscan.io',
+    explorerUrl: 'https://arbitrum.blockscout.com',
     nativeCurrency: {
       name: 'Ether',
       symbol: 'ETH',
@@ -106,7 +106,7 @@ export const networks: Record<string, NetworkConfig> = {
     name: 'Polygon',
     chain: polygon,
     rpcUrl: 'https://polygon-rpc.com',
-    explorerUrl: 'https://polygonscan.com',
+    explorerUrl: 'https://polygon.blockscout.com',
     nativeCurrency: {
       name: 'MATIC',
       symbol: 'MATIC',
@@ -138,7 +138,7 @@ export const networks: Record<string, NetworkConfig> = {
     name: 'Sepolia',
     chain: sepolia,
     rpcUrl: import.meta.env.VITE_SEPOLIA_RPC_URL || 'https://eth-sepolia.public.blastapi.io',
-    explorerUrl: 'https://sepolia.etherscan.io',
+    explorerUrl: 'https://eth-sepolia.blockscout.com',
     nativeCurrency: {
       name: 'Sepolia Ether',
       symbol: 'ETH',
@@ -153,7 +153,7 @@ export const networks: Record<string, NetworkConfig> = {
     name: 'Base Sepolia',
     chain: baseSepolia,
     rpcUrl: import.meta.env.VITE_BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org',
-    explorerUrl: 'https://sepolia.basescan.org',
+    explorerUrl: 'https://base-sepolia.blockscout.com',
     nativeCurrency: {
       name: 'Sepolia Ether',
       symbol: 'ETH',

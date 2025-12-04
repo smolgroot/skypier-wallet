@@ -105,6 +105,7 @@ describe('Wallet Store', () => {
       createdAt: Date.now(),
       credentialId: 'test-credential-id',
       publicKey: '0x04abcd1234',
+      encryptedPrivateKey: '0x' + 'ab'.repeat(32),
     };
 
     it('should add a new wallet', async () => {
@@ -176,6 +177,7 @@ describe('Wallet Store', () => {
       createdAt: Date.now(),
       credentialId: 'cred-1',
       publicKey: '0x04abcd1234',
+      encryptedPrivateKey: '0x' + 'ab'.repeat(32),
     };
 
     const wallet2: BiometricWallet = {
@@ -185,6 +187,7 @@ describe('Wallet Store', () => {
       createdAt: Date.now(),
       credentialId: 'cred-2',
       publicKey: '0x04efgh5678',
+      encryptedPrivateKey: '0x' + 'cd'.repeat(32),
     };
 
     beforeEach(async () => {
@@ -258,6 +261,7 @@ describe('Wallet Store', () => {
       createdAt: Date.now(),
       credentialId: 'test-credential-id',
       publicKey: '0x04abcd1234',
+      encryptedPrivateKey: '0x' + 'ab'.repeat(32),
     };
 
     beforeEach(() => {
@@ -310,6 +314,7 @@ describe('Wallet Store', () => {
         createdAt: Date.now(),
         credentialId: 'test-cred',
         publicKey: '0x04test',
+        encryptedPrivateKey: '0x' + 'ab'.repeat(32),
       };
 
       vi.mocked(retrieveWallets).mockResolvedValue([mockWallet]);
@@ -340,6 +345,7 @@ describe('Wallet Store', () => {
         createdAt: Date.now(),
         credentialId,
         publicKey: '0x04test',
+        encryptedPrivateKey: '0x' + 'cd'.repeat(32),
       };
 
       vi.mocked(retrieveWallets).mockResolvedValue([mockWallet]);

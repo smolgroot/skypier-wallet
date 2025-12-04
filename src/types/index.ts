@@ -11,17 +11,19 @@ export interface Wallet {
   createdAt: number
   publicKey?: string
   credentialId?: string // For biometric wallets
+  encryptedPrivateKey?: string // Encrypted secp256k1 private key for signing
 }
 
 export interface BiometricWallet extends Wallet {
   type: 'biometric'
   credentialId: string
   publicKey: string
+  encryptedPrivateKey: string // Required for transaction signing
 }
 
 export interface ImportedWallet extends Wallet {
   type: 'imported'
-  // Private key is stored encrypted, not in this interface
+  encryptedPrivateKey: string // Required for transaction signing
 }
 
 /**

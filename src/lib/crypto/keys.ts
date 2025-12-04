@@ -1,16 +1,19 @@
 import { secp256r1 } from '@noble/curves/p256'
+import { secp256k1 } from '@noble/curves/secp256k1'
 import { keccak_256 } from '@noble/hashes/sha3'
 import { bytesToHex } from '@noble/hashes/utils'
 import { WalletError, WalletErrorCode } from '@/types'
 import type { KeyPair, Signature } from '@/types'
 
 /**
- * Cryptographic operations using secp256r1 (P-256) curve
- * Compatible with EIP-7212 for hardware security module integration
+ * Cryptographic operations using secp256r1 (P-256) and secp256k1 curves
+ * 
+ * - secp256r1: Compatible with EIP-7212 / RIP-7212 for hardware security module integration
+ * - secp256k1: Standard Ethereum curve for EOA transactions
  */
 
 /**
- * Generate a new secp256r1 key pair
+ * Generate a new secp256r1 key pair (for biometric/HSM wallets)
  */
 export function generateKeyPair(): KeyPair {
   try {
@@ -31,7 +34,28 @@ export function generateKeyPair(): KeyPair {
 }
 
 /**
- * Derive Ethereum address from secp256r1 public key
+ * Generate a new secp256k1 key pair (for standard Ethereum EOA transactions)
+ */
+export function generateSecp256k1KeyPair(): KeyPair {
+  try {
+    const privateKey = secp256k1.utils.randomPrivateKey()
+    const publicKey = secp256k1.getPublicKey(privateKey, false) // Uncompressed format
+
+    return {
+      privateKey,
+      publicKey,
+    }
+  } catch (error) {
+    throw new WalletError(
+      'Failed to generate secp256k1 key pair',
+      WalletErrorCode.KEY_GENERATION_FAILED,
+      error
+    )
+  }
+}
+
+/**
+ * Derive Ethereum address from public key (works for both curves)
  * 
  * Process:
  * 1. Remove the 0x04 prefix from uncompressed public key
@@ -164,6 +188,22 @@ function hexToBytes(hex: string): Uint8Array {
     bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16)
   }
   return bytes
+}
+
+/**
+ * Convert private key bytes to hex string with 0x prefix
+ * Compatible with viem's privateKeyToAccount
+ */
+export function privateKeyToHex(privateKey: Uint8Array): `0x${string}` {
+  return `0x${bytesToHex(privateKey)}` as `0x${string}`
+}
+
+/**
+ * Convert hex private key to Uint8Array
+ */
+export function hexToPrivateKey(hex: string): Uint8Array {
+  const cleanHex = hex.startsWith('0x') ? hex.slice(2) : hex
+  return hexToBytes(cleanHex)
 }
 
 /**

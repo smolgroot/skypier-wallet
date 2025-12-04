@@ -2,7 +2,8 @@
  * Biometric Setup Component
  * 
  * Handles the biometric enrollment process for wallet creation.
- * Creates WebAuthn credential, generates secp256r1 key pair, and stores wallet.
+ * Creates WebAuthn credential for authentication, generates secp256k1 key pair
+ * for transaction signing, and stores encrypted wallet data.
  */
 
 import { useState } from 'react';
@@ -28,7 +29,7 @@ import {
   Save as SaveIcon,
 } from '@mui/icons-material';
 import { webAuthnService } from '@/lib/auth/webauthn';
-import { deriveAddressFromWebAuthnPublicKey } from '@/lib/crypto/keys';
+import { generateSecp256k1KeyPair, deriveAddressFromPublicKey, privateKeyToHex } from '@/lib/crypto/keys';
 import { useWalletStore } from '@/store/wallet.store';
 import type { BiometricWallet, WalletError } from '@/types';
 
@@ -49,30 +50,35 @@ export default function BiometricSetup({ onComplete, onCancel }: BiometricSetupP
     try {
       setError(null);
       
-      // Step 1: Create WebAuthn credential
+      // Step 1: Create WebAuthn credential (for biometric authentication)
       setCurrentStep('creating-credential');
       const userId = crypto.randomUUID();
       const userName = walletName || `Wallet ${Date.now()}`;
       
       const credential = await webAuthnService.createCredential(userId, userName);
       
-      // Step 2: Derive Ethereum address from public key
+      // Step 2: Generate secp256k1 key pair for Ethereum transactions
+      // This is the key that will sign actual transactions
       setCurrentStep('deriving-address');
-      const address = deriveAddressFromWebAuthnPublicKey(credential.publicKey);
+      const { privateKey, publicKey } = generateSecp256k1KeyPair();
+      const address = deriveAddressFromPublicKey(publicKey);
+      const privateKeyHex = privateKeyToHex(privateKey);
       
-      // Step 3: Create wallet object
+      // Step 3: Create wallet object with encrypted private key
+      // The private key is stored encrypted - only accessible after biometric auth
       const wallet: BiometricWallet = {
         address,
         type: 'biometric',
         name: userName,
         createdAt: Date.now(),
-        publicKey: Array.from(credential.publicKey)
+        publicKey: Array.from(publicKey)
           .map(b => b.toString(16).padStart(2, '0'))
           .join(''),
         credentialId: credential.id,
+        encryptedPrivateKey: privateKeyHex, // Will be encrypted by the store
       };
       
-      // Step 4: Store wallet
+      // Step 4: Store wallet (private key will be encrypted)
       setCurrentStep('storing-wallet');
       await addWallet(wallet);
       
