@@ -11,6 +11,7 @@ import { createAppTheme } from '@/theme';
 import { useWalletStore } from '@/store/wallet.store';
 import Welcome from '@/pages/Welcome';
 import CreateWallet from '@/pages/CreateWallet';
+import Dashboard from '@/pages/Dashboard';
 
 function App() {
   const initialize = useWalletStore((state) => state.initialize);
@@ -28,6 +29,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Welcome />} />
           <Route path="/create-wallet" element={<CreateWallet />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           {/* TODO: Add more routes */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
