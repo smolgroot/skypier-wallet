@@ -18,6 +18,11 @@ import {
   Tab,
   IconButton,
   Fade,
+  Chip,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import {
@@ -28,22 +33,16 @@ import {
   SwapHoriz as SwapIcon,
   MoreVert as MoreIcon,
   KeyboardArrowDown as ArrowDownIcon,
+  Circle as CircleIcon,
+  Refresh as RefreshIcon,
 } from '@mui/icons-material';
 import { useWalletStore, walletSelectors } from '@/store/wallet.store';
 import Jazzicon from '@/components/atoms/Jazzicon';
 import TokenListItem, { type Token } from '@/components/molecules/TokenListItem';
 import NFTCard, { type NFT } from '@/components/molecules/NFTCard';
 import WalletSelectorModal from '@/components/organisms/WalletSelectorModal';
-
-// Placeholder token data
-const MOCK_TOKENS: Token[] = [
-  { symbol: 'ETH', name: 'Ethereum', balance: '2.4582', price: 3450.00, change24h: 2.34, color: '#627EEA' },
-  { symbol: 'WASSIE', name: 'Wassie', balance: '420690', price: 0.000234, change24h: 15.67, color: '#4169E1' },
-  { symbol: 'MOG', name: 'Mog Coin', balance: '1500000', price: 0.00000089, change24h: -8.45, color: '#FF6B6B' },
-  { symbol: 'PEPE', name: 'Pepe', balance: '25000000', price: 0.0000185, change24h: 5.23, color: '#3CB371' },
-  { symbol: 'MON', name: 'Mon Protocol', balance: '5000', price: 0.42, change24h: 12.89, color: '#9B59B6' },
-  { symbol: 'GRT', name: 'The Graph', balance: '1250', price: 0.28, change24h: -2.15, color: '#6747ED' },
-];
+import { useBalance } from '@/hooks/useBalance';
+import { useNetworkStore, useCurrentNetwork, useNetworkActions } from '@/hooks/useNetwork';
 
 // Placeholder NFT data
 const MOCK_NFTS: NFT[] = [
@@ -63,11 +62,41 @@ export default function Dashboard() {
   const isLocked = useWalletStore((state) => state.isLocked);
   const setActiveWallet = useWalletStore((state) => state.setActiveWallet);
   
+  // Network state
+  const currentNetwork = useCurrentNetwork();
+  const selectedNetworkId = useNetworkStore((state) => state.selectedNetworkId);
+  const { setNetwork, allNetworks } = useNetworkActions();
+  const [networkMenuAnchor, setNetworkMenuAnchor] = useState<null | HTMLElement>(null);
+  
+  // Balance fetching
+  const { 
+    data: balanceData, 
+    isLoading: balanceLoading, 
+    isError: balanceError,
+    refetch: refetchBalance,
+  } = useBalance({
+    address: activeWallet?.address,
+    networkId: selectedNetworkId,
+    enabled: !!activeWallet && !isLocked,
+  });
+
   const [unlocking, setUnlocking] = useState(false);
   const [unlockError, setUnlockError] = useState<string | null>(null);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
   const [copied, setCopied] = useState(false);
+
+  // Create token list with real balance
+  const tokens: Token[] = balanceData ? [
+    {
+      symbol: balanceData.symbol,
+      name: currentNetwork?.nativeCurrency.name ?? 'Ether',
+      balance: balanceData.formatted,
+      price: 0, // No price data yet in POC
+      change24h: 0,
+      color: currentNetwork?.iconColor ?? '#627EEA',
+    },
+  ] : [];
 
   // Redirect to welcome only if no wallets exist at all
   useEffect(() => {
@@ -109,10 +138,9 @@ export default function Dashboard() {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
-  // Calculate total portfolio value
-  const totalValue = MOCK_TOKENS.reduce((sum, token) => {
-    return sum + parseFloat(token.balance) * token.price;
-  }, 0);
+  // Calculate total portfolio value (just native balance for now)
+  const totalValue = balanceData?.value ?? 0;
+  // TODO: Add price feed and multiply by ETH price
 
   // Locked State
   if (isLocked) {
@@ -250,60 +278,119 @@ export default function Dashboard() {
             </Box>
 
             {/* Address */}
-            <Stack
-              direction="row"
-              alignItems="center"
-              spacing={1}
-              onClick={handleCopyAddress}
-              sx={{
-                cursor: 'pointer',
-                py: 0.75,
-                px: 2,
-                borderRadius: 2,
-                bgcolor: 'action.hover',
-                transition: 'all 0.2s',
-                '&:hover': {
-                  bgcolor: 'action.selected',
+            <Stack direction="row" alignItems="center" spacing={1.5}>
+              {/* Network Selector */}
+              <Chip
+                icon={<CircleIcon sx={{ fontSize: 10, color: currentNetwork?.iconColor }} />}
+                label={currentNetwork?.name ?? 'Unknown'}
+                size="small"
+                onClick={(e) => setNetworkMenuAnchor(e.currentTarget)}
+                onDelete={(e) => setNetworkMenuAnchor(e.currentTarget as HTMLElement)}
+                deleteIcon={<ArrowDownIcon />}
+                sx={{
+                  bgcolor: 'action.hover',
+                  '&:hover': { bgcolor: 'action.selected' },
+                  '.MuiChip-deleteIcon': {
+                    color: 'text.secondary',
+                  },
+                }}
+              />
+              
+              {/* Address Copy Button */}
+              <Stack
+                direction="row"
+                alignItems="center"
+                spacing={1}
+                onClick={handleCopyAddress}
+                sx={{
+                  cursor: 'pointer',
+                  py: 0.75,
+                  px: 2,
+                  borderRadius: 2,
+                  bgcolor: 'action.hover',
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    bgcolor: 'action.selected',
+                  },
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ fontFamily: 'monospace', fontWeight: 500 }}
+                >
+                  {formatAddress(activeWallet.address)}
+                </Typography>
+                <CopyIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+                <Fade in={copied}>
+                  <Typography variant="caption" color="success.main" sx={{ fontWeight: 600 }}>
+                    Copied!
+                  </Typography>
+                </Fade>
+              </Stack>
+            </Stack>
+
+            {/* Network Menu */}
+            <Menu
+              anchorEl={networkMenuAnchor}
+              open={Boolean(networkMenuAnchor)}
+              onClose={() => setNetworkMenuAnchor(null)}
+              PaperProps={{
+                sx: {
+                  minWidth: 180,
+                  bgcolor: 'background.paper',
+                  borderRadius: 2,
+                  mt: 1,
                 },
               }}
             >
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ fontFamily: 'monospace', fontWeight: 500 }}
-              >
-                {formatAddress(activeWallet.address)}
-              </Typography>
-              <CopyIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-              <Fade in={copied}>
-                <Typography variant="caption" color="success.main" sx={{ fontWeight: 600 }}>
-                  Copied!
-                </Typography>
-              </Fade>
-            </Stack>
+              {allNetworks.map((network) => (
+                <MenuItem
+                  key={network.id}
+                  selected={network.id === selectedNetworkId}
+                  onClick={() => {
+                    setNetwork(network.id);
+                    setNetworkMenuAnchor(null);
+                  }}
+                >
+                  <ListItemIcon>
+                    <CircleIcon sx={{ fontSize: 12, color: network.iconColor }} />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary={network.name} 
+                    secondary={network.isTestnet ? 'Testnet' : 'Mainnet'}
+                  />
+                </MenuItem>
+              ))}
+            </Menu>
 
             {/* Total Balance */}
             <Box textAlign="center">
-              <Typography
-                variant="h2"
-                fontWeight={700}
-                sx={{
-                  fontSize: { xs: '2.5rem', sm: '3.5rem' },
-                  background: (theme) =>
-                    `linear-gradient(135deg, ${theme.palette.text.primary} 0%, ${theme.palette.primary.main} 100%)`,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
-              >
-                ${totalValue.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Portfolio Value
-              </Typography>
+              {balanceLoading ? (
+                <Box sx={{ py: 2 }}>
+                  <CircularProgress size={40} />
+                </Box>
+              ) : (
+                <>
+                  <Typography
+                    variant="h2"
+                    fontWeight={700}
+                    sx={{
+                      fontSize: { xs: '2.5rem', sm: '3.5rem' },
+                      background: (theme) =>
+                        `linear-gradient(135deg, ${theme.palette.text.primary} 0%, ${theme.palette.primary.main} 100%)`,
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                    }}
+                  >
+                    {totalValue.toFixed(4)} {balanceData?.symbol ?? 'ETH'}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {currentNetwork?.name ?? 'Unknown Network'} Balance
+                  </Typography>
+                </>
+              )}
             </Box>
 
             {/* Action Buttons */}
@@ -385,9 +472,36 @@ export default function Dashboard() {
         {/* Tokens Tab */}
         {activeTab === 0 && (
           <Stack spacing={0.5}>
-            {MOCK_TOKENS.map((token) => (
-              <TokenListItem key={token.symbol} token={token} onClick={() => {}} />
-            ))}
+            {balanceLoading ? (
+              <Box sx={{ p: 3, textAlign: 'center' }}>
+                <CircularProgress size={32} />
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  Loading balance...
+                </Typography>
+              </Box>
+            ) : balanceError ? (
+              <Alert 
+                severity="error" 
+                action={
+                  <IconButton size="small" onClick={() => refetchBalance()}>
+                    <RefreshIcon fontSize="small" />
+                  </IconButton>
+                }
+              >
+                Failed to load balance
+              </Alert>
+            ) : tokens.length > 0 ? (
+              tokens.map((token) => (
+                <TokenListItem key={token.symbol} token={token} onClick={() => {}} />
+              ))
+            ) : (
+              <Box sx={{ textAlign: 'center', py: 6, color: 'text.secondary' }}>
+                <Typography variant="body1">No tokens found</Typography>
+                <Typography variant="body2" sx={{ mt: 1 }}>
+                  Get some testnet ETH from a faucet
+                </Typography>
+              </Box>
+            )}
           </Stack>
         )}
 
