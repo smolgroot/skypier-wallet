@@ -32,6 +32,8 @@ import {
   Error as ErrorIcon,
 } from '@mui/icons-material';
 import { webAuthnService } from '@/lib/auth/webauthn';
+import { hasStoredWallets } from '@/lib/storage/encrypted';
+import { useWalletStore } from '@/store/wallet.store';
 
 interface DeviceCapabilities {
   webAuthnSupported: boolean;
@@ -46,6 +48,9 @@ export default function Welcome() {
     platformAuthenticatorAvailable: false,
     isLoading: true,
   });
+  const [hasExistingWallets, setHasExistingWallets] = useState(false);
+  const wallets = useWalletStore((state) => state.wallets);
+  const isLocked = useWalletStore((state) => state.isLocked);
 
   const checkDeviceCapabilities = async () => {
     try {
@@ -59,6 +64,9 @@ export default function Welcome() {
         platformAuthenticatorAvailable,
         isLoading: false,
       });
+      
+      // Check if wallets exist in storage
+      setHasExistingWallets(hasStoredWallets());
     } catch (error) {
       console.error('Failed to check device capabilities:', error);
       setCapabilities({
@@ -72,11 +80,23 @@ export default function Welcome() {
   useEffect(() => {
     void checkDeviceCapabilities();
   }, []);
+  
+  // Redirect to dashboard if already unlocked with wallets
+  useEffect(() => {
+    if (wallets.length > 0 && !isLocked) {
+      navigate('/dashboard');
+    }
+  }, [wallets, isLocked, navigate]);
 
   function handleGetStarted() {
     if (capabilities.platformAuthenticatorAvailable) {
       navigate('/create-wallet');
     }
+  }
+  
+  function handleUnlock() {
+    // For now, navigate to dashboard which will show unlock UI
+    navigate('/dashboard');
   }
 
   function renderCapabilityStatus() {
@@ -221,23 +241,47 @@ export default function Welcome() {
 
         {/* CTA Buttons */}
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center">
-          <Button
-            variant="contained"
-            size="large"
-            onClick={handleGetStarted}
-            disabled={!capabilities.platformAuthenticatorAvailable || capabilities.isLoading}
-            startIcon={<FingerprintIcon />}
-          >
-            Create Biometric Wallet
-          </Button>
-          <Button
-            variant="outlined"
-            size="large"
-            onClick={() => navigate('/import-wallet')}
-            disabled={capabilities.isLoading}
-          >
-            Import Existing Wallet
-          </Button>
+          {hasExistingWallets ? (
+            <>
+              <Button
+                variant="contained"
+                size="large"
+                onClick={handleUnlock}
+                disabled={!capabilities.platformAuthenticatorAvailable || capabilities.isLoading}
+                startIcon={<FingerprintIcon />}
+              >
+                Unlock Wallet
+              </Button>
+              <Button
+                variant="outlined"
+                size="large"
+                onClick={handleGetStarted}
+                disabled={!capabilities.platformAuthenticatorAvailable || capabilities.isLoading}
+              >
+                Create New Wallet
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="contained"
+                size="large"
+                onClick={handleGetStarted}
+                disabled={!capabilities.platformAuthenticatorAvailable || capabilities.isLoading}
+                startIcon={<FingerprintIcon />}
+              >
+                Create Biometric Wallet
+              </Button>
+              <Button
+                variant="outlined"
+                size="large"
+                onClick={() => navigate('/import-wallet')}
+                disabled={capabilities.isLoading}
+              >
+                Import Existing Wallet
+              </Button>
+            </>
+          )}
         </Stack>
 
         {/* Security Note */}

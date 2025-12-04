@@ -4,7 +4,7 @@
  * Main wallet dashboard showing balance, transactions, and wallet management.
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -15,10 +15,13 @@ import {
   Stack,
   Chip,
   Button,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import {
   AccountBalanceWallet as WalletIcon,
   Add as AddIcon,
+  Fingerprint as FingerprintIcon,
 } from '@mui/icons-material';
 import { useWalletStore, walletSelectors } from '@/store/wallet.store';
 
@@ -28,6 +31,8 @@ export default function Dashboard() {
   const wallets = useWalletStore((state) => state.wallets);
   const hasWallets = useWalletStore(walletSelectors.hasWallets);
   const isLocked = useWalletStore((state) => state.isLocked);
+  const [unlocking, setUnlocking] = useState(false);
+  const [unlockError, setUnlockError] = useState<string | null>(null);
 
   // Redirect to welcome only if no wallets exist at all (not just locked)
   useEffect(() => {
@@ -36,19 +41,62 @@ export default function Dashboard() {
       navigate('/');
     }
   }, [hasWallets, isLocked, navigate]);
+  
+  const handleUnlock = async () => {
+    setUnlocking(true);
+    setUnlockError(null);
+    
+    try {
+      // Get the last used credential ID from storage
+      const lastCredentialId = localStorage.getItem('skypier_last_credential_id');
+      
+      if (!lastCredentialId) {
+        // If no credential ID, we need to get it somehow
+        // For now, navigate back to welcome
+        setUnlockError('No credential found. Please create a new wallet.');
+        return;
+      }
+      
+      // Try to unlock with the last credential
+      await useWalletStore.getState().unlock(lastCredentialId);
+    } catch (error) {
+      console.error('Unlock failed:', error);
+      setUnlockError(error instanceof Error ? error.message : 'Failed to unlock wallet');
+    } finally {
+      setUnlocking(false);
+    }
+  };
 
   // If locked, we should have wallets but they're encrypted
   if (isLocked) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Stack spacing={4} alignItems="center">
+          <FingerprintIcon sx={{ fontSize: 80, color: 'primary.main' }} />
           <Typography variant="h4">Wallet Locked</Typography>
-          <Typography variant="body1" color="text.secondary">
-            Your wallet is locked. Please unlock it to continue.
+          <Typography variant="body1" color="text.secondary" textAlign="center">
+            Your wallet is locked. Authenticate with your biometric to unlock.
           </Typography>
-          <Button variant="contained" onClick={() => navigate('/')}>
-            Back to Home
-          </Button>
+          
+          {unlockError && (
+            <Alert severity="error" sx={{ maxWidth: 500 }}>
+              {unlockError}
+            </Alert>
+          )}
+          
+          <Stack direction="row" spacing={2}>
+            <Button 
+              variant="contained" 
+              onClick={handleUnlock}
+              disabled={unlocking}
+              startIcon={unlocking ? <CircularProgress size={20} /> : <FingerprintIcon />}
+            >
+              {unlocking ? 'Unlocking...' : 'Unlock Wallet'}
+            </Button>
+            <Button variant="outlined" onClick={() => navigate('/')}>
+              Back to Home
+            </Button>
+          </Stack>
         </Stack>
       </Container>
     );

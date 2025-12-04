@@ -133,6 +133,9 @@ export const useWalletStore = create<WalletState>()(
               
               // Store encrypted wallets
               await storeWallets(updatedWallets, password);
+              
+              // Store last credential ID for unlocking later
+              localStorage.setItem('skypier_last_credential_id', biometricWallet.credentialId);
             } else {
               // For imported wallets, we still need a password
               // In a real implementation, this would come from user input
