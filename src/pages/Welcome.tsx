@@ -51,6 +51,7 @@ export default function Welcome() {
   const [hasExistingWallets, setHasExistingWallets] = useState(false);
   const wallets = useWalletStore((state) => state.wallets);
   const isLocked = useWalletStore((state) => state.isLocked);
+  const isLoading = useWalletStore((state) => state.isLoading);
 
   const checkDeviceCapabilities = async () => {
     try {
@@ -83,10 +84,15 @@ export default function Welcome() {
   
   // Redirect to dashboard if already unlocked with wallets
   useEffect(() => {
-    if (wallets.length > 0 && !isLocked) {
+    if (!isLoading && wallets.length > 0 && !isLocked) {
       navigate('/dashboard');
     }
-  }, [wallets, isLocked, navigate]);
+  }, [wallets, isLocked, isLoading, navigate]);
+
+  // Show nothing while store is initializing (prevents flash)
+  if (isLoading) {
+    return null;
+  }
 
   function handleGetStarted() {
     if (capabilities.platformAuthenticatorAvailable) {

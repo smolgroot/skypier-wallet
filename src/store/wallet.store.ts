@@ -21,6 +21,54 @@ import {
 } from '@/lib/storage/encrypted';
 import { webAuthnService } from '@/lib/auth/webauthn';
 
+// Session configuration
+const SESSION_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+const SESSION_KEY = 'skypier_session';
+
+interface SessionData {
+  expiresAt: number;
+  credentialId: string;
+}
+
+/**
+ * Check if there's a valid session
+ */
+const getValidSession = (): SessionData | null => {
+  try {
+    const sessionStr = localStorage.getItem(SESSION_KEY);
+    if (!sessionStr) return null;
+    
+    const session: SessionData = JSON.parse(sessionStr);
+    if (Date.now() > session.expiresAt) {
+      // Session expired, clear it
+      localStorage.removeItem(SESSION_KEY);
+      return null;
+    }
+    
+    return session;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Create or extend a session
+ */
+const createSession = (credentialId: string): void => {
+  const session: SessionData = {
+    expiresAt: Date.now() + SESSION_TIMEOUT_MS,
+    credentialId,
+  };
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+};
+
+/**
+ * Clear the session
+ */
+const clearSession = (): void => {
+  localStorage.removeItem(SESSION_KEY);
+};
+
 interface WalletState {
   // State
   wallets: Wallet[];
@@ -64,6 +112,7 @@ export const useWalletStore = create<WalletState>()(
 
         /**
          * Initialize the store by loading wallets from encrypted storage
+         * If there's a valid session, auto-unlock the wallet
          */
         initialize: async () => {
           const { isLocked, wallets } = get();
@@ -82,9 +131,42 @@ export const useWalletStore = create<WalletState>()(
               return;
             }
             
-            // If we have wallets but they're encrypted, we need authentication
-            // Don't auto-unlock here - require explicit unlock action
-            // Only set locked if we don't already have wallets loaded
+            // Check for valid session - auto-unlock if session is still valid
+            const session = getValidSession();
+            if (session) {
+              try {
+                // Derive password from stored credential (no biometric prompt needed)
+                const password = await derivePasswordFromCredential(session.credentialId);
+                
+                // Retrieve and decrypt wallets
+                const decryptedWallets = await retrieveWallets(password);
+                
+                if (decryptedWallets.length > 0) {
+                  // Get active wallet
+                  const activeAddress = retrieveActiveWallet();
+                  const activeWallet = activeAddress 
+                    ? decryptedWallets.find(w => w.address === activeAddress) || decryptedWallets[0]
+                    : decryptedWallets[0];
+                  
+                  // Extend the session
+                  createSession(session.credentialId);
+                  
+                  set({ 
+                    wallets: decryptedWallets,
+                    activeWallet,
+                    isLocked: false,
+                    isLoading: false,
+                  });
+                  return;
+                }
+              } catch (error) {
+                // Session auto-unlock failed, clear session and require auth
+                console.error('Session auto-unlock failed:', error);
+                clearSession();
+              }
+            }
+            
+            // No valid session or auto-unlock failed - require authentication
             if (wallets.length === 0) {
               set({ 
                 isLoading: false, 
@@ -136,6 +218,9 @@ export const useWalletStore = create<WalletState>()(
               
               // Store last credential ID for unlocking later
               localStorage.setItem('skypier_last_credential_id', biometricWallet.credentialId);
+              
+              // Create session for 5-minute auto-unlock
+              createSession(biometricWallet.credentialId);
             } else {
               // For imported wallets, we still need a password
               // In a real implementation, this would come from user input
@@ -252,6 +337,7 @@ export const useWalletStore = create<WalletState>()(
          * Lock the wallet (clear sensitive data from memory)
          */
         lock: () => {
+          clearSession();
           set({ 
             isLocked: true,
             wallets: [],
@@ -290,6 +376,9 @@ export const useWalletStore = create<WalletState>()(
             const activeWallet = activeAddress 
               ? decryptedWallets.find(w => w.address === activeAddress) || decryptedWallets[0]
               : decryptedWallets[0];
+            
+            // Create session for 5-minute auto-unlock on refresh
+            createSession(credentialId);
             
             set({ 
               wallets: decryptedWallets,
