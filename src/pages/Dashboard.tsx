@@ -23,6 +23,7 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
+  Divider,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import {
@@ -282,7 +283,29 @@ export default function Dashboard() {
               {/* Network Selector */}
               <Chip
                 icon={<CircleIcon sx={{ fontSize: 10, color: currentNetwork?.iconColor }} />}
-                label={currentNetwork?.name ?? 'Unknown'}
+                label={
+                  <Stack direction="row" alignItems="center" spacing={0.5}>
+                    <span>{currentNetwork?.name ?? 'Unknown'}</span>
+                    {currentNetwork?.isTestnet && (
+                      <Box
+                        component="span"
+                        sx={{
+                          fontSize: '0.6rem',
+                          fontWeight: 700,
+                          px: 0.5,
+                          py: 0.1,
+                          borderRadius: 0.5,
+                          bgcolor: 'warning.main',
+                          color: 'warning.contrastText',
+                          textTransform: 'uppercase',
+                          letterSpacing: 0.5,
+                        }}
+                      >
+                        Test
+                      </Box>
+                    )}
+                  </Stack>
+                }
                 size="small"
                 onClick={(e) => setNetworkMenuAnchor(e.currentTarget)}
                 onDelete={(e) => setNetworkMenuAnchor(e.currentTarget as HTMLElement)}
@@ -337,31 +360,118 @@ export default function Dashboard() {
               onClose={() => setNetworkMenuAnchor(null)}
               PaperProps={{
                 sx: {
-                  minWidth: 180,
+                  minWidth: 220,
+                  maxHeight: 400,
                   bgcolor: 'background.paper',
                   borderRadius: 2,
                   mt: 1,
                 },
               }}
             >
-              {allNetworks.map((network) => (
-                <MenuItem
-                  key={network.id}
-                  selected={network.id === selectedNetworkId}
-                  onClick={() => {
-                    setNetwork(network.id);
-                    setNetworkMenuAnchor(null);
-                  }}
-                >
-                  <ListItemIcon>
-                    <CircleIcon sx={{ fontSize: 12, color: network.iconColor }} />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary={network.name} 
-                    secondary={network.isTestnet ? 'Testnet' : 'Mainnet'}
-                  />
-                </MenuItem>
-              ))}
+              {/* Mainnet Networks */}
+              <Typography
+                variant="overline"
+                sx={{ px: 2, py: 0.5, display: 'block', color: 'text.secondary', fontWeight: 600 }}
+              >
+                Mainnets
+              </Typography>
+              {allNetworks
+                .filter((n) => !n.isTestnet)
+                .map((network) => (
+                  <MenuItem
+                    key={network.id}
+                    selected={network.id === selectedNetworkId}
+                    onClick={() => {
+                      setNetwork(network.id);
+                      setNetworkMenuAnchor(null);
+                    }}
+                    sx={{ py: 1.25 }}
+                  >
+                    <ListItemIcon>
+                      <CircleIcon sx={{ fontSize: 12, color: network.iconColor }} />
+                    </ListItemIcon>
+                    <ListItemText 
+                      primary={network.name}
+                      secondary={network.nativeCurrency.symbol}
+                    />
+                    {network.eip7212Supported && (
+                      <Chip
+                        label="R1"
+                        size="small"
+                        sx={{
+                          height: 18,
+                          fontSize: '0.65rem',
+                          fontWeight: 700,
+                          bgcolor: 'success.main',
+                          color: 'success.contrastText',
+                        }}
+                      />
+                    )}
+                  </MenuItem>
+                ))}
+              
+              <Divider sx={{ my: 1 }} />
+              
+              {/* Testnet Networks */}
+              <Typography
+                variant="overline"
+                sx={{ px: 2, py: 0.5, display: 'block', color: 'text.secondary', fontWeight: 600 }}
+              >
+                Testnets
+              </Typography>
+              {allNetworks
+                .filter((n) => n.isTestnet)
+                .map((network) => (
+                  <MenuItem
+                    key={network.id}
+                    selected={network.id === selectedNetworkId}
+                    onClick={() => {
+                      setNetwork(network.id);
+                      setNetworkMenuAnchor(null);
+                    }}
+                    sx={{ py: 1.25 }}
+                  >
+                    <ListItemIcon>
+                      <CircleIcon sx={{ fontSize: 12, color: network.iconColor }} />
+                    </ListItemIcon>
+                    <ListItemText 
+                      primary={
+                        <Stack direction="row" alignItems="center" spacing={0.75}>
+                          <span>{network.name}</span>
+                          <Box
+                            component="span"
+                            sx={{
+                              fontSize: '0.55rem',
+                              fontWeight: 700,
+                              px: 0.5,
+                              py: 0.1,
+                              borderRadius: 0.5,
+                              bgcolor: 'warning.main',
+                              color: 'warning.contrastText',
+                              textTransform: 'uppercase',
+                            }}
+                          >
+                            Testnet
+                          </Box>
+                        </Stack>
+                      }
+                      secondary={network.nativeCurrency.symbol}
+                    />
+                    {network.eip7212Supported && (
+                      <Chip
+                        label="R1"
+                        size="small"
+                        sx={{
+                          height: 18,
+                          fontSize: '0.65rem',
+                          fontWeight: 700,
+                          bgcolor: 'success.main',
+                          color: 'success.contrastText',
+                        }}
+                      />
+                    )}
+                  </MenuItem>
+                ))}
             </Menu>
 
             {/* Total Balance */}

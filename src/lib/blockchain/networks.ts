@@ -2,10 +2,19 @@
  * Network Configuration
  * 
  * Defines supported blockchain networks for the wallet.
- * POC Phase: Sepolia and Base Sepolia testnets
+ * Includes Ethereum mainnet, major L2s, and testnets.
  */
 
-import { sepolia, baseSepolia } from 'viem/chains';
+import { 
+  mainnet, 
+  sepolia, 
+  base, 
+  baseSepolia, 
+  optimism, 
+  arbitrum, 
+  polygon,
+  zora,
+} from 'viem/chains';
 import type { Chain } from 'viem';
 
 export interface NetworkConfig {
@@ -27,15 +36,108 @@ export interface NetworkConfig {
 /**
  * Supported Networks
  * 
- * For POC, we support Sepolia and Base Sepolia testnets.
- * These networks allow testing without real funds.
+ * Mainnets: Ethereum, Base, Optimism, Arbitrum, Polygon, Zora
+ * Testnets: Sepolia, Base Sepolia
  */
 export const networks: Record<string, NetworkConfig> = {
+  // === MAINNETS ===
+  mainnet: {
+    id: 'mainnet',
+    name: 'Ethereum',
+    chain: mainnet,
+    rpcUrl: import.meta.env.VITE_ETHEREUM_RPC_URL || 'https://eth.llamarpc.com',
+    explorerUrl: 'https://etherscan.io',
+    nativeCurrency: {
+      name: 'Ether',
+      symbol: 'ETH',
+      decimals: 18,
+    },
+    isTestnet: false,
+    iconColor: '#627EEA',
+    eip7212Supported: false,
+  },
+  base: {
+    id: 'base',
+    name: 'Base',
+    chain: base,
+    rpcUrl: import.meta.env.VITE_BASE_RPC_URL || 'https://mainnet.base.org',
+    explorerUrl: 'https://basescan.org',
+    nativeCurrency: {
+      name: 'Ether',
+      symbol: 'ETH',
+      decimals: 18,
+    },
+    isTestnet: false,
+    iconColor: '#0052FF',
+    eip7212Supported: true, // Base supports EIP-7212
+  },
+  optimism: {
+    id: 'optimism',
+    name: 'Optimism',
+    chain: optimism,
+    rpcUrl: import.meta.env.VITE_OPTIMISM_RPC_URL || 'https://mainnet.optimism.io',
+    explorerUrl: 'https://optimistic.etherscan.io',
+    nativeCurrency: {
+      name: 'Ether',
+      symbol: 'ETH',
+      decimals: 18,
+    },
+    isTestnet: false,
+    iconColor: '#FF0420',
+    eip7212Supported: false,
+  },
+  arbitrum: {
+    id: 'arbitrum',
+    name: 'Arbitrum',
+    chain: arbitrum,
+    rpcUrl: import.meta.env.VITE_ARBITRUM_RPC_URL || 'https://arb1.arbitrum.io/rpc',
+    explorerUrl: 'https://arbiscan.io',
+    nativeCurrency: {
+      name: 'Ether',
+      symbol: 'ETH',
+      decimals: 18,
+    },
+    isTestnet: false,
+    iconColor: '#28A0F0',
+    eip7212Supported: false,
+  },
+  polygon: {
+    id: 'polygon',
+    name: 'Polygon',
+    chain: polygon,
+    rpcUrl: 'https://polygon-rpc.com',
+    explorerUrl: 'https://polygonscan.com',
+    nativeCurrency: {
+      name: 'MATIC',
+      symbol: 'MATIC',
+      decimals: 18,
+    },
+    isTestnet: false,
+    iconColor: '#8247E5',
+    eip7212Supported: false,
+  },
+  zora: {
+    id: 'zora',
+    name: 'Zora',
+    chain: zora,
+    rpcUrl: 'https://rpc.zora.energy',
+    explorerUrl: 'https://explorer.zora.energy',
+    nativeCurrency: {
+      name: 'Ether',
+      symbol: 'ETH',
+      decimals: 18,
+    },
+    isTestnet: false,
+    iconColor: '#000000',
+    eip7212Supported: true, // Zora supports EIP-7212
+  },
+
+  // === TESTNETS ===
   sepolia: {
     id: 'sepolia',
     name: 'Sepolia',
     chain: sepolia,
-    rpcUrl: 'https://eth-sepolia.public.blastapi.io',
+    rpcUrl: import.meta.env.VITE_SEPOLIA_RPC_URL || 'https://eth-sepolia.public.blastapi.io',
     explorerUrl: 'https://sepolia.etherscan.io',
     nativeCurrency: {
       name: 'Sepolia Ether',
@@ -44,13 +146,13 @@ export const networks: Record<string, NetworkConfig> = {
     },
     isTestnet: true,
     iconColor: '#627EEA',
-    eip7212Supported: false, // EIP-7212 not yet on Sepolia
+    eip7212Supported: false,
   },
   'base-sepolia': {
     id: 'base-sepolia',
     name: 'Base Sepolia',
     chain: baseSepolia,
-    rpcUrl: 'https://sepolia.base.org',
+    rpcUrl: import.meta.env.VITE_BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org',
     explorerUrl: 'https://sepolia.basescan.org',
     nativeCurrency: {
       name: 'Sepolia Ether',
@@ -59,7 +161,7 @@ export const networks: Record<string, NetworkConfig> = {
     },
     isTestnet: true,
     iconColor: '#0052FF',
-    eip7212Supported: true, // Base supports EIP-7212
+    eip7212Supported: true, // Base Sepolia supports EIP-7212
   },
 };
 
