@@ -139,15 +139,26 @@ export default function Welcome() {
   }
 
   return (
-    <Container maxWidth="md" sx={{ py: 8 }}>
+    <Container maxWidth="md" sx={{ py: { xs: 4, md: 8 } }}>
       <Stack spacing={4}>
         {/* Header */}
         <Box textAlign="center">
-          <Typography variant="h2" component="h1" gutterBottom fontWeight="bold">
+          <Typography 
+            variant="h3" 
+            component="h1" 
+            gutterBottom 
+            fontWeight="bold"
+            sx={{ fontSize: { xs: '2rem', md: '3rem' } }}
+          >
             Welcome to SkypierWallet
           </Typography>
-          <Typography variant="h5" color="text.secondary" paragraph>
-            The future of secure, biometric-enabled Ethereum wallets
+          <Typography 
+            variant="h6" 
+            color="text.secondary" 
+            paragraph
+            sx={{ fontSize: { xs: '1rem', md: '1.25rem' } }}
+          >
+            Secure, biometric-enabled Ethereum wallet
           </Typography>
           <Chip
             label="Powered by EIP-7212"
@@ -157,89 +168,7 @@ export default function Welcome() {
           />
         </Box>
 
-        {/* Device Capability Status */}
-        {renderCapabilityStatus()}
-
-        {/* Features */}
-        <Card elevation={2}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom fontWeight="medium">
-              Why SkypierWallet?
-            </Typography>
-            <List>
-              <ListItem>
-                <ListItemIcon>
-                  <SecurityIcon color="primary" />
-                </ListItemIcon>
-                <ListItemText
-                  primary="Hardware-Level Security"
-                  secondary="Your private keys are generated and stored in your device's secure enclave using secp256r1 cryptography"
-                />
-              </ListItem>
-              <ListItem>
-                <ListItemIcon>
-                  <FingerprintIcon color="primary" />
-                </ListItemIcon>
-                <ListItemText
-                  primary="Biometric Authentication"
-                  secondary="Unlock your wallet with Face ID, Touch ID, or other biometric methods - no passwords to remember"
-                />
-              </ListItem>
-              <ListItem>
-                <ListItemIcon>
-                  <SpeedIcon color="primary" />
-                </ListItemIcon>
-                <ListItemText
-                  primary="EIP-7212 Compatible"
-                  secondary="Leverages Ethereum's Fusaka upgrade for native secp256r1 signature verification on-chain"
-                />
-              </ListItem>
-            </List>
-          </CardContent>
-        </Card>
-
-        {/* What You'll Need */}
-        <Card elevation={2}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom fontWeight="medium">
-              What You'll Need
-            </Typography>
-            <List dense>
-              <ListItem>
-                <ListItemIcon>
-                  <CheckCircleIcon color={capabilities.webAuthnSupported ? 'success' : 'disabled'} fontSize="small" />
-                </ListItemIcon>
-                <ListItemText
-                  primary="WebAuthn-compatible browser"
-                  secondary="Chrome, Firefox, Safari, or Edge"
-                />
-              </ListItem>
-              <ListItem>
-                <ListItemIcon>
-                  <CheckCircleIcon
-                    color={capabilities.platformAuthenticatorAvailable ? 'success' : 'disabled'}
-                    fontSize="small"
-                  />
-                </ListItemIcon>
-                <ListItemText
-                  primary="Biometric authenticator"
-                  secondary="Face ID, Touch ID, Windows Hello, or Android Biometric"
-                />
-              </ListItem>
-              <ListItem>
-                <ListItemIcon>
-                  <CheckCircleIcon color="success" fontSize="small" />
-                </ListItemIcon>
-                <ListItemText
-                  primary="A few minutes of your time"
-                  secondary="The setup process is quick and easy"
-                />
-              </ListItem>
-            </List>
-          </CardContent>
-        </Card>
-
-        {/* CTA Buttons */}
+        {/* CTA Buttons - Moved to top */}
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center">
           {hasExistingWallets ? (
             <>
@@ -249,6 +178,7 @@ export default function Welcome() {
                 onClick={handleUnlock}
                 disabled={!capabilities.platformAuthenticatorAvailable || capabilities.isLoading}
                 startIcon={<FingerprintIcon />}
+                sx={{ py: 1.5, px: 4 }}
               >
                 Unlock Wallet
               </Button>
@@ -257,6 +187,7 @@ export default function Welcome() {
                 size="large"
                 onClick={handleGetStarted}
                 disabled={!capabilities.platformAuthenticatorAvailable || capabilities.isLoading}
+                sx={{ py: 1.5, px: 4 }}
               >
                 Create New Wallet
               </Button>
@@ -269,6 +200,7 @@ export default function Welcome() {
                 onClick={handleGetStarted}
                 disabled={!capabilities.platformAuthenticatorAvailable || capabilities.isLoading}
                 startIcon={<FingerprintIcon />}
+                sx={{ py: 1.5, px: 4 }}
               >
                 Create Biometric Wallet
               </Button>
@@ -277,6 +209,7 @@ export default function Welcome() {
                 size="large"
                 onClick={() => navigate('/import-wallet')}
                 disabled={capabilities.isLoading}
+                sx={{ py: 1.5, px: 4 }}
               >
                 Import Existing Wallet
               </Button>
@@ -284,13 +217,64 @@ export default function Welcome() {
           )}
         </Stack>
 
-        {/* Security Note */}
-        <Alert severity="info" variant="outlined">
-          <AlertTitle>Security Note</AlertTitle>
-          SkypierWallet stores your private keys securely on your device. They never leave your
-          device and are protected by your biometric authentication. Make sure to back up your
-          recovery phrase in a secure location.
-        </Alert>
+        {/* Device Capability Status */}
+        {renderCapabilityStatus()}
+
+        {/* Collapsible Features - Less prominent */}
+        <Box>
+          <Typography 
+            variant="subtitle2" 
+            color="text.secondary" 
+            textAlign="center" 
+            sx={{ mb: 2, cursor: 'pointer' }}
+          >
+            Learn more ↓
+          </Typography>
+          <Stack spacing={2}>
+            <Card elevation={1} sx={{ display: { xs: 'none', md: 'block' } }}>
+              <CardContent>
+                <Typography variant="subtitle1" gutterBottom fontWeight="medium">
+                  Key Features
+                </Typography>
+                <List dense>
+                  <ListItem>
+                    <ListItemIcon>
+                      <SecurityIcon color="primary" fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="Hardware-Level Security"
+                      primaryTypographyProps={{ variant: 'body2' }}
+                      secondary="Keys stored in secure enclave with secp256r1"
+                      secondaryTypographyProps={{ variant: 'caption' }}
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemIcon>
+                      <FingerprintIcon color="primary" fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="Biometric Authentication"
+                      primaryTypographyProps={{ variant: 'body2' }}
+                      secondary="No passwords to remember"
+                      secondaryTypographyProps={{ variant: 'caption' }}
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemIcon>
+                      <SpeedIcon color="primary" fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="EIP-7212 Compatible"
+                      primaryTypographyProps={{ variant: 'body2' }}
+                      secondary="Native on-chain signature verification"
+                      secondaryTypographyProps={{ variant: 'caption' }}
+                    />
+                  </ListItem>
+                </List>
+              </CardContent>
+            </Card>
+          </Stack>
+        </Box>
       </Stack>
     </Container>
   );

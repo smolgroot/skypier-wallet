@@ -40,26 +40,43 @@ export default function CreateWallet() {
   };
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      <Paper elevation={3} sx={{ p: 4 }}>
+    <Container maxWidth="md" sx={{ py: { xs: 2, md: 4 } }}>
+      <Paper elevation={3} sx={{ p: { xs: 2, md: 4 } }}>
         {/* Header */}
-        <Box mb={4}>
-          <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
+        <Box mb={3}>
+          <Typography 
+            variant="h4" 
+            component="h1" 
+            gutterBottom 
+            fontWeight="bold"
+            sx={{ fontSize: { xs: '1.5rem', md: '2.125rem' } }}
+          >
             Create Biometric Wallet
           </Typography>
-          <Typography variant="body1" color="text.secondary">
+          <Typography 
+            variant="body2" 
+            color="text.secondary"
+            sx={{ fontSize: { xs: '0.875rem', md: '1rem' } }}
+          >
             Set up a secure wallet protected by your device's biometric authentication
           </Typography>
         </Box>
 
         {/* Stepper */}
-        <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+        <Stepper activeStep={activeStep} sx={{ mb: 3, display: { xs: 'none', sm: 'flex' } }}>
           {steps.map((label) => (
             <Step key={label}>
               <StepLabel>{label}</StepLabel>
             </Step>
           ))}
         </Stepper>
+        
+        {/* Mobile progress indicator */}
+        <Box sx={{ display: { xs: 'block', sm: 'none' }, mb: 3, textAlign: 'center' }}>
+          <Typography variant="caption" color="text.secondary">
+            Step {activeStep + 1} of {steps.length}
+          </Typography>
+        </Box>
 
         {/* Step Content */}
         <Box>
