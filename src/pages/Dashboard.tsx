@@ -27,13 +27,32 @@ export default function Dashboard() {
   const activeWallet = useWalletStore((state) => state.activeWallet);
   const wallets = useWalletStore((state) => state.wallets);
   const hasWallets = useWalletStore(walletSelectors.hasWallets);
+  const isLocked = useWalletStore((state) => state.isLocked);
 
-  // Redirect to welcome if no wallets
+  // Redirect to welcome only if no wallets exist at all (not just locked)
   useEffect(() => {
-    if (!hasWallets) {
+    if (!hasWallets && !isLocked) {
+      // Only redirect if truly no wallets, not just locked
       navigate('/');
     }
-  }, [hasWallets, navigate]);
+  }, [hasWallets, isLocked, navigate]);
+
+  // If locked, we should have wallets but they're encrypted
+  if (isLocked) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Stack spacing={4} alignItems="center">
+          <Typography variant="h4">Wallet Locked</Typography>
+          <Typography variant="body1" color="text.secondary">
+            Your wallet is locked. Please unlock it to continue.
+          </Typography>
+          <Button variant="contained" onClick={() => navigate('/')}>
+            Back to Home
+          </Button>
+        </Stack>
+      </Container>
+    );
+  }
 
   if (!activeWallet) {
     return null;

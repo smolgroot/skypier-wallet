@@ -66,6 +66,13 @@ export const useWalletStore = create<WalletState>()(
          * Initialize the store by loading wallets from encrypted storage
          */
         initialize: async () => {
+          const { isLocked, wallets } = get();
+          
+          // If already initialized with wallets, don't re-initialize
+          if (wallets.length > 0 && !isLocked) {
+            return;
+          }
+          
           set({ isLoading: true, error: null });
           
           try {
@@ -77,10 +84,15 @@ export const useWalletStore = create<WalletState>()(
             
             // If we have wallets but they're encrypted, we need authentication
             // Don't auto-unlock here - require explicit unlock action
-            set({ 
-              isLoading: false, 
-              isLocked: true,
-            });
+            // Only set locked if we don't already have wallets loaded
+            if (wallets.length === 0) {
+              set({ 
+                isLoading: false, 
+                isLocked: true,
+              });
+            } else {
+              set({ isLoading: false });
+            }
           } catch (error) {
             console.error('Failed to initialize wallet store:', error);
             set({

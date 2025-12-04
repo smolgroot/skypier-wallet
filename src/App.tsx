@@ -14,13 +14,12 @@ import CreateWallet from '@/pages/CreateWallet';
 import Dashboard from '@/pages/Dashboard';
 
 function App() {
-  const initialize = useWalletStore((state) => state.initialize);
   const theme = createAppTheme('dark'); // TODO: Add theme toggle
 
-  // Initialize wallet store on app load
+  // Initialize wallet store on app load (once)
   useEffect(() => {
-    void initialize();
-  }, [initialize]);
+    void useWalletStore.getState().initialize();
+  }, []);
 
   return (
     <ThemeProvider theme={theme}>
