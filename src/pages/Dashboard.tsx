@@ -506,12 +506,13 @@ export default function Dashboard() {
             {/* Action Buttons */}
             <Stack direction="row" spacing={2}>
               {[
-                { icon: <SendIcon />, label: 'Send', color: 'primary' },
-                { icon: <ReceiveIcon />, label: 'Receive', color: 'secondary' },
-                { icon: <SwapIcon />, label: 'Swap', color: 'info' },
+                { icon: <SendIcon />, label: 'Send', color: 'primary', onClick: () => navigate('/send') },
+                { icon: <ReceiveIcon />, label: 'Receive', color: 'secondary', onClick: () => {} },
+                { icon: <SwapIcon />, label: 'Swap', color: 'info', onClick: () => {} },
               ].map((action) => (
                 <Stack key={action.label} alignItems="center" spacing={1}>
                   <IconButton
+                    onClick={action.onClick}
                     sx={{
                       width: 56,
                       height: 56,

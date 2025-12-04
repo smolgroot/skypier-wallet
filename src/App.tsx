@@ -13,6 +13,7 @@ import { useWalletStore } from '@/store/wallet.store';
 import Welcome from '@/pages/Welcome';
 import CreateWallet from '@/pages/CreateWallet';
 import Dashboard from '@/pages/Dashboard';
+import Send from '@/pages/Send';
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -42,6 +43,7 @@ function App() {
             <Route path="/" element={<Welcome />} />
             <Route path="/create-wallet" element={<CreateWallet />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/send" element={<Send />} />
             {/* TODO: Add more routes */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
