@@ -22,6 +22,7 @@ import {
   AccountBalanceWallet as WalletIcon,
   Add as AddIcon,
   Fingerprint as FingerprintIcon,
+  CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
 import { useWalletStore, walletSelectors } from '@/store/wallet.store';
 
@@ -72,53 +73,63 @@ export default function Dashboard() {
   // If locked, we should have wallets but they're encrypted
   if (isLocked) {
     return (
-      <Container maxWidth="sm" sx={{ py: { xs: 4, md: 8 } }}>
-        <Stack spacing={3} alignItems="center">
-          <FingerprintIcon sx={{ fontSize: { xs: 60, md: 80 }, color: 'primary.main' }} />
-          <Typography 
-            variant="h4" 
-            textAlign="center"
-            sx={{ fontSize: { xs: '1.75rem', md: '2.125rem' } }}
-          >
-            Wallet Locked
-          </Typography>
-          <Typography 
-            variant="body1" 
-            color="text.secondary" 
-            textAlign="center"
-            sx={{ fontSize: { xs: '0.875rem', md: '1rem' } }}
-          >
-            Authenticate with your biometric to unlock your wallets.
-          </Typography>
-          
-          {unlockError && (
-            <Alert severity="error" sx={{ width: '100%' }}>
-              {unlockError}
-            </Alert>
-          )}
-          
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ width: '100%', maxWidth: 400 }}>
-            <Button 
-              variant="contained" 
-              fullWidth
-              onClick={handleUnlock}
-              disabled={unlocking}
-              startIcon={unlocking ? <CircularProgress size={20} /> : <FingerprintIcon />}
-              sx={{ py: 1.5 }}
+      <Box 
+        sx={{ 
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          px: 2
+        }}
+      >
+        <Container maxWidth="sm">
+          <Stack spacing={3} alignItems="center">
+            <FingerprintIcon sx={{ fontSize: { xs: 60, md: 80 }, color: 'primary.main' }} />
+            <Typography 
+              variant="h4" 
+              textAlign="center"
+              sx={{ fontSize: { xs: '1.75rem', md: '2.125rem' } }}
             >
-              {unlocking ? 'Unlocking...' : 'Unlock Wallet'}
-            </Button>
-            <Button 
-              variant="outlined" 
-              fullWidth 
-              onClick={() => navigate('/')}
-              sx={{ py: 1.5 }}
+              Wallet Locked
+            </Typography>
+            <Typography 
+              variant="body1" 
+              color="text.secondary" 
+              textAlign="center"
+              sx={{ fontSize: { xs: '0.875rem', md: '1rem' } }}
             >
-              Back
-            </Button>
+              Authenticate with your biometric to unlock your wallets.
+            </Typography>
+            
+            {unlockError && (
+              <Alert severity="error" sx={{ width: '100%' }}>
+                {unlockError}
+              </Alert>
+            )}
+            
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ width: '100%', maxWidth: 400 }}>
+              <Button 
+                variant="contained" 
+                fullWidth
+                onClick={handleUnlock}
+                disabled={unlocking}
+                startIcon={unlocking ? <CircularProgress size={20} /> : <FingerprintIcon />}
+                sx={{ py: 1.5 }}
+              >
+                {unlocking ? 'Unlocking...' : 'Unlock Wallet'}
+              </Button>
+              <Button 
+                variant="outlined" 
+                fullWidth 
+                onClick={() => navigate('/')}
+                sx={{ py: 1.5 }}
+              >
+                Back
+              </Button>
+            </Stack>
           </Stack>
-        </Stack>
-      </Container>
+        </Container>
+      </Box>
     );
   }
 
@@ -136,70 +147,79 @@ export default function Dashboard() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
-      <Stack spacing={3}>
-        {/* Header */}
-        <Box>
-          <Typography 
-            variant="h4" 
-            component="h1" 
-            gutterBottom 
-            fontWeight="bold"
-            sx={{ fontSize: { xs: '1.75rem', md: '2.125rem' } }}
-          >
-            Dashboard
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {wallets.length} wallet{wallets.length !== 1 ? 's' : ''}
-          </Typography>
-        </Box>
-
-        {/* Active Wallet Card */}
-        <Card elevation={3}>
-          <CardContent>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+      {/* Header with Wallet Info */}
+      <Box 
+        sx={{ 
+          bgcolor: 'background.paper',
+          borderBottom: 1,
+          borderColor: 'divider',
+          position: 'sticky',
+          top: 0,
+          zIndex: 10
+        }}
+      >
+        <Container maxWidth="lg">
+          <Box sx={{ py: 2 }}>
             <Stack spacing={2}>
-              {/* Wallet Selector Button */}
-              {wallets.length > 1 && (
-                <Button
-                  variant="text"
-                  size="small"
-                  onClick={() => setShowWalletSelector(!showWalletSelector)}
-                  sx={{ alignSelf: 'flex-start', mb: 1 }}
-                >
-                  {showWalletSelector ? 'Hide' : 'Switch'} Wallet
-                </Button>
-              )}
-              
-              <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={1}>
-                <Stack direction="row" alignItems="center" spacing={2} sx={{ minWidth: 0 }}>
-                  <WalletIcon fontSize="large" color="primary" sx={{ flexShrink: 0 }} />
-                  <Box sx={{ minWidth: 0 }}>
-                    <Typography variant="h6" sx={{ fontSize: { xs: '1rem', md: '1.25rem' } }}>
-                      {activeWallet.name || 'Unnamed Wallet'}
-                    </Typography>
+              {/* Wallet Address with Dropdown */}
+              <Stack 
+                direction="row" 
+                alignItems="center" 
+                spacing={1.5}
+                sx={{ cursor: wallets.length > 1 ? 'pointer' : 'default' }}
+                onClick={() => wallets.length > 1 && setShowWalletSelector(!showWalletSelector)}
+              >
+                <WalletIcon color="primary" sx={{ fontSize: 32 }} />
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography 
+                    variant="subtitle2" 
+                    color="text.secondary"
+                    sx={{ fontSize: '0.75rem' }}
+                  >
+                    {activeWallet.name || 'Wallet'}
+                  </Typography>
+                  <Stack direction="row" alignItems="center" spacing={0.5}>
                     <Typography 
-                      variant="body2" 
-                      color="text.secondary" 
+                      variant="body1" 
                       fontFamily="monospace"
+                      fontWeight="medium"
                       sx={{ 
-                        fontSize: { xs: '0.75rem', md: '0.875rem' },
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis'
+                        fontSize: { xs: '0.875rem', sm: '1rem' }
                       }}
                     >
                       {formatAddress(activeWallet.address)}
                     </Typography>
-                  </Box>
-                </Stack>
+                    {wallets.length > 1 && (
+                      <Box 
+                        component="span" 
+                        sx={{ 
+                          transform: showWalletSelector ? 'rotate(180deg)' : 'rotate(0deg)',
+                          transition: 'transform 0.2s',
+                          display: 'flex',
+                          alignItems: 'center'
+                        }}
+                      >
+                        ▼
+                      </Box>
+                    )}
+                  </Stack>
+                </Box>
                 <Chip
-                  label={activeWallet.type === 'biometric' ? 'Biometric' : 'Imported'}
+                  label={activeWallet.type === 'biometric' ? 'Bio' : 'Imported'}
                   color="primary"
                   size="small"
+                  sx={{ display: { xs: 'none', sm: 'flex' } }}
                 />
               </Stack>
 
-              <Box>
-                <Typography variant="h4" fontWeight="bold" sx={{ fontSize: { xs: '2rem', md: '2.5rem' } }}>
+              {/* Balance */}
+              <Box sx={{ textAlign: 'center', py: 1 }}>
+                <Typography 
+                  variant="h3" 
+                  fontWeight="bold"
+                  sx={{ fontSize: { xs: '2.5rem', md: '3rem' } }}
+                >
                   0.00 ETH
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
@@ -207,100 +227,108 @@ export default function Dashboard() {
                 </Typography>
               </Box>
             </Stack>
-          </CardContent>
-        </Card>
+          </Box>
+        </Container>
 
-        {/* Wallet Selector */}
+        {/* Wallet Selector Dropdown */}
         {showWalletSelector && wallets.length > 1 && (
-          <Card variant="outlined">
-            <CardContent>
-              <Typography variant="subtitle2" gutterBottom sx={{ mb: 2 }}>
-                Select Wallet:
-              </Typography>
-              <Stack spacing={1}>
-                {wallets.map((wallet) => (
-                  <Card
-                    key={wallet.address}
-                    variant="outlined"
-                    sx={{
-                      cursor: 'pointer',
-                      bgcolor: wallet.address === activeWallet.address ? 'action.selected' : 'background.paper',
-                      '&:hover': {
-                        bgcolor: 'action.hover',
-                      },
-                      border: wallet.address === activeWallet.address ? 2 : 1,
-                      borderColor: wallet.address === activeWallet.address ? 'primary.main' : 'divider',
-                    }}
-                    onClick={() => handleSwitchWallet(wallet.address)}
-                  >
-                    <CardContent sx={{ py: 2, '&:last-child': { pb: 2 } }}>
+          <Box 
+            sx={{ 
+              borderTop: 1, 
+              borderColor: 'divider',
+              bgcolor: 'background.default'
+            }}
+          >
+            <Container maxWidth="lg">
+              <Box sx={{ py: 2 }}>
+                <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+                  Switch Wallet
+                </Typography>
+                <Stack spacing={1}>
+                  {wallets.map((wallet) => (
+                    <Box
+                      key={wallet.address}
+                      onClick={() => handleSwitchWallet(wallet.address)}
+                      sx={{
+                        p: 2,
+                        borderRadius: 1,
+                        cursor: 'pointer',
+                        bgcolor: wallet.address === activeWallet.address ? 'action.selected' : 'transparent',
+                        border: 1,
+                        borderColor: wallet.address === activeWallet.address ? 'primary.main' : 'divider',
+                        '&:hover': {
+                          bgcolor: 'action.hover',
+                        },
+                      }}
+                    >
                       <Stack direction="row" alignItems="center" justifyContent="space-between">
                         <Box sx={{ minWidth: 0, flex: 1 }}>
-                          <Typography variant="subtitle2" fontWeight="medium">
+                          <Typography variant="body2" fontWeight="medium">
                             {wallet.name || 'Unnamed Wallet'}
                           </Typography>
                           <Typography 
                             variant="caption" 
                             color="text.secondary" 
                             fontFamily="monospace"
-                            sx={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis' }}
                           >
                             {formatAddress(wallet.address)}
                           </Typography>
                         </Box>
-                        <Chip
-                          label={wallet.type === 'biometric' ? 'Bio' : 'Imported'}
-                          size="small"
-                          variant={wallet.address === activeWallet.address ? 'filled' : 'outlined'}
-                          color={wallet.address === activeWallet.address ? 'primary' : 'default'}
-                        />
+                        {wallet.address === activeWallet.address && (
+                          <CheckCircleIcon color="primary" fontSize="small" />
+                        )}
                       </Stack>
-                    </CardContent>
-                  </Card>
-                ))}
+                    </Box>
+                  ))}
+                </Stack>
+              </Box>
+            </Container>
+          </Box>
+        )}
+      </Box>
+
+      {/* Main Content */}
+      <Container maxWidth="lg" sx={{ py: 3 }}>
+        <Stack spacing={3}>
+          {/* Quick Actions */}
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <Button
+              variant="outlined"
+              fullWidth
+              startIcon={<AddIcon />}
+              onClick={() => navigate('/create-wallet')}
+            >
+              Add Wallet
+            </Button>
+          </Stack>
+
+          {/* Coming Soon Features */}
+          <Card variant="outlined">
+            <CardContent>
+              <Typography variant="subtitle2" gutterBottom>
+                Coming Soon:
+              </Typography>
+              <Stack spacing={1} sx={{ mt: 1 }}>
+                <Typography variant="body2" color="text.secondary">
+                  • Send and receive transactions
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  • View transaction history
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  • Manage tokens and NFTs
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  • Connect to dApps
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  • Multi-network support
+                </Typography>
               </Stack>
             </CardContent>
           </Card>
-        )}
-
-        {/* Quick Actions */}
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-          <Button
-            variant="outlined"
-            fullWidth
-            startIcon={<AddIcon />}
-            onClick={() => navigate('/create-wallet')}
-          >
-            Add Wallet
-          </Button>
         </Stack>
-
-        {/* Coming Soon Features */}
-        <Card variant="outlined">
-          <CardContent>
-            <Typography variant="subtitle2" gutterBottom>
-              Coming Soon:
-            </Typography>
-            <Stack spacing={1} sx={{ mt: 1 }}>
-              <Typography variant="body2" color="text.secondary">
-                • Send and receive transactions
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                • View transaction history
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                • Manage tokens and NFTs
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                • Connect to dApps
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                • Multi-network support
-              </Typography>
-            </Stack>
-          </CardContent>
-        </Card>
-      </Stack>
-    </Container>
+      </Container>
+    </Box>
   );
 }
